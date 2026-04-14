@@ -10,14 +10,15 @@ import java.sql.SQLException;
  */
 public class Conexao {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/banco";
-    private static final String DB_USER = "rogerio";
-    private static final String DB_PASSWORD = "1234";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "";
     private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
-    
+
     private Connection connection;
 
     /**
      * Opens a database connection.
+     * 
      * @return Connection object if successful, null otherwise
      */
     public Connection abrirBDConn() {

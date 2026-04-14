@@ -17,18 +17,19 @@ public class ClienteControl {
 
     /**
      * Inserts a new client into the database.
-     * @param nome Client name
-     * @param placa Vehicle plate
-     * @param marca Vehicle brand
+     * 
+     * @param nome   Client name
+     * @param placa  Vehicle plate
+     * @param marca  Vehicle brand
      * @param modelo Vehicle model
-     * @param cor Vehicle color
+     * @param cor    Vehicle color
      */
     public void insereDados(String nome, String placa, String marca, String modelo, String cor) {
         Conexao banco = new Conexao();
         String sql = "INSERT INTO banco.cliente (nome, placa, marca, modelo, cor) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = banco.abrirBDConn();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, nome);
             pstmt.setString(2, placa);
@@ -48,6 +49,7 @@ public class ClienteControl {
 
     /**
      * Deletes a client by vehicle plate.
+     * 
      * @param placa Vehicle plate of the client to delete
      */
     public void excluirCliente(String placa) {
@@ -55,7 +57,7 @@ public class ClienteControl {
         String sql = "DELETE FROM banco.cliente WHERE placa = ?";
 
         try (Connection conn = banco.abrirBDConn();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, placa);
             int rowsAffected = pstmt.executeUpdate();
@@ -75,20 +77,22 @@ public class ClienteControl {
 
     /**
      * Updates client data in the database.
-     * @param nome Client name
-     * @param placa Vehicle plate
-     * @param marca Vehicle brand
+     * 
+     * @param nome   Client name
+     * @param placa  Vehicle plate
+     * @param marca  Vehicle brand
      * @param modelo Vehicle model
-     * @param cor Vehicle color
+     * @param cor    Vehicle color
      * @param cliBin Client business object containing the ID
      * @return Status message
      */
-    public String atualizarDados(String nome, String placa, String marca, String modelo, String cor, ClienteBin cliBin) {
+    public String atualizarDados(String nome, String placa, String marca, String modelo, String cor,
+            ClienteBin cliBin) {
         Conexao banco = new Conexao();
         String sql = "UPDATE banco.cliente SET nome = ?, placa = ?, marca = ?, modelo = ?, cor = ? WHERE idCliente = ?";
 
         try (Connection conn = banco.abrirBDConn();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, nome);
             pstmt.setString(2, placa);
@@ -115,7 +119,8 @@ public class ClienteControl {
 
     /**
      * Searches for a client by name and populates the provided ClienteBin object.
-     * @param nome Client name to search
+     * 
+     * @param nome   Client name to search
      * @param cliBin ClienteBin object to populate with results
      */
     public void buscarDados(String nome, ClienteBin cliBin) {
@@ -123,13 +128,13 @@ public class ClienteControl {
         String sql = "SELECT * FROM banco.cliente WHERE nome = ?";
 
         try (Connection conn = banco.abrirBDConn();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, nome);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                cliBin.setId(rs.getInt("id"));
+                cliBin.setId(rs.getInt("IDCliente"));
                 cliBin.setNome(rs.getString("nome"));
                 cliBin.setPlaca(rs.getString("placa"));
                 cliBin.setMarca(rs.getString("marca"));

@@ -1,89 +1,148 @@
 package sistema.control;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import javax.swing.JOptionPane;
 
-import com.mysql.jdbc.Connection;
-import com.mysql.jdbc.Statement;
-
 import sistema.bin.ClienteBin;
-import sistema.conexao.conexao;
+import sistema.conexao.Conexao;
 
+/**
+ * Controller class for Client operations.
+ * Handles CRUD operations for clients.
+ */
 public class ClienteControl {
-	
-	public void InsereDados(String nome,String placa,String marca,String modelo,String cor){
-		conexao banco = new conexao();
-		String retorno = "erro";
-		try {
-			Connection ExConn = (Connection) banco.abrirBDConn();
-			Statement stmt = (Statement) ExConn.createStatement();
-			String sSQL = "INSERT INTO banco.cliente VALUES (null,'"+nome+"','"+placa+"','"+marca+"','"+modelo+"','"+cor+"');";
-			System.out.println(sSQL);
-			boolean res = stmt.execute(sSQL);
-			JOptionPane.showMessageDialog(null,(!res)?"Dados inseridos com sucesso!!!":"" +
-			"Os dados n„o puderam ser inseridos!!!");
-			stmt.close();
-			banco.fecharBDConn();
-			}catch(Exception e){
-				JOptionPane.showMessageDialog(null,"Os dados n„o puderam ser inseridos!!!");
-				}
-		}
 
-	public void ExcluirCliente(String placa){
-		conexao banco = new conexao();
-		try {
-			Connection ExConn = (Connection) banco.abrirBDConn();
-			Statement stmt = (Statement) ExConn.createStatement();
-			String sSQL = "DELETE FROM banco.cliente WHERE placa = '"+placa+"';";
-			boolean rs = stmt.execute(sSQL);
-			JOptionPane.showMessageDialog(null,(!rs)? "Dados do cliente excluidos com sucesso.":"Dados do cliente n„o foram excluidos com sucesso.");
-			stmt.close();
-			banco.fecharBDConn();
-			}catch(Exception e){
-				JOptionPane.showMessageDialog(null,"Os dados n„o foram encontrado!!!");
-				} 
-		}
+    /**
+     * Inserts a new client into the database.
+     * @param nome Client name
+     * @param placa Vehicle plate
+     * @param marca Vehicle brand
+     * @param modelo Vehicle model
+     * @param cor Vehicle color
+     */
+    public void insereDados(String nome, String placa, String marca, String modelo, String cor) {
+        Conexao banco = new Conexao();
+        String sql = "INSERT INTO banco.cliente (nome, placa, marca, modelo, cor) VALUES (?, ?, ?, ?, ?)";
 
-	public String AtualizarDados(String nome,String placa,String marca,String modelo,String cor, ClienteBin CliBin){
-		conexao banco = new conexao();
-		String retorno = "erro";
-		int res;
-		try {
+        try (Connection conn = banco.abrirBDConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-			Connection ExConn = (Connection) banco.abrirBDConn();
-			Statement stmt = (Statement) ExConn.createStatement();
-			res = stmt.executeUpdate("UPDATE banco.cliente SET nome = '"+nome+"', placa = '"+placa+
-					"',marca = '"+marca+"',modelo = '"+modelo+"', cor = '"+cor+"', WHERE idCliente = "+CliBin.getId());
-			
-			if(res==1)JOptionPane.showMessageDialog(null,"Os dados† foram atualizados com sucesso!!!");
-			stmt.close();
-			banco.fecharBDConn();
-			}catch(Exception e){
-				JOptionPane.showMessageDialog(null,"Os dados n„o puderam ser atualizados!!!");
-				}
-		return retorno;
-		}
-	public void BuscarDados(String nome,ClienteBin CliBin) {
-		conexao banco = new conexao();
+            pstmt.setString(1, nome);
+            pstmt.setString(2, placa);
+            pstmt.setString(3, marca);
+            pstmt.setString(4, modelo);
+            pstmt.setString(5, cor);
 
-		try {
-			Connection ExConn = (Connection) banco.abrirBDConn();
-			Statement stmt = (Statement) ExConn.createStatement();
-			String sSQL = "SELECT * FROM banco.cliente WHERE nome = '"+nome+"';";
-			ResultSet rs = stmt.executeQuery(sSQL);
-			while(rs.next())
-			{
-				CliBin.setId(rs.getInt("id"));
-				CliBin.setNome(rs.getString("nome"));
-				CliBin.setPlaca(rs.getString("placa"));
-				CliBin.setMarca(rs.getString("marca"));
-				CliBin.setModelo(rs.getString("modelo"));
-				CliBin.setCor(rs.getString("cor"));
-				}
-			stmt.close();
-			banco.fecharBDConn();
-			}catch(Exception e){
-				JOptionPane.showMessageDialog(null,"Os dados n„o puderam ser encontrado!!!");
-				} 
-		}
-	}
+            pstmt.executeUpdate();
+            JOptionPane.showMessageDialog(null, "Dados inseridos com sucesso!!!");
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Os dados n√£o puderam ser inseridos!!!\n" + e.getMessage());
+        } finally {
+            banco.fecharBDConn();
+        }
+    }
+
+    /**
+     * Deletes a client by vehicle plate.
+     * @param placa Vehicle plate of the client to delete
+     */
+    public void excluirCliente(String placa) {
+        Conexao banco = new Conexao();
+        String sql = "DELETE FROM banco.cliente WHERE placa = ?";
+
+        try (Connection conn = banco.abrirBDConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, placa);
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Dados do cliente excluidos com sucesso.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Dados do cliente n√£o foram excluidos com sucesso.");
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Os dados n√£o foram encontrados!!!\n" + e.getMessage());
+        } finally {
+            banco.fecharBDConn();
+        }
+    }
+
+    /**
+     * Updates client data in the database.
+     * @param nome Client name
+     * @param placa Vehicle plate
+     * @param marca Vehicle brand
+     * @param modelo Vehicle model
+     * @param cor Vehicle color
+     * @param cliBin Client business object containing the ID
+     * @return Status message
+     */
+    public String atualizarDados(String nome, String placa, String marca, String modelo, String cor, ClienteBin cliBin) {
+        Conexao banco = new Conexao();
+        String sql = "UPDATE banco.cliente SET nome = ?, placa = ?, marca = ?, modelo = ?, cor = ? WHERE idCliente = ?";
+
+        try (Connection conn = banco.abrirBDConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, nome);
+            pstmt.setString(2, placa);
+            pstmt.setString(3, marca);
+            pstmt.setString(4, modelo);
+            pstmt.setString(5, cor);
+            pstmt.setInt(6, cliBin.getId());
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected == 1) {
+                JOptionPane.showMessageDialog(null, "Os dados foram atualizados com sucesso!!!");
+                return "success";
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Os dados n√£o puderam ser atualizados!!!\n" + e.getMessage());
+        } finally {
+            banco.fecharBDConn();
+        }
+
+        return "erro";
+    }
+
+    /**
+     * Searches for a client by name and populates the provided ClienteBin object.
+     * @param nome Client name to search
+     * @param cliBin ClienteBin object to populate with results
+     */
+    public void buscarDados(String nome, ClienteBin cliBin) {
+        Conexao banco = new Conexao();
+        String sql = "SELECT * FROM banco.cliente WHERE nome = ?";
+
+        try (Connection conn = banco.abrirBDConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, nome);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                cliBin.setId(rs.getInt("id"));
+                cliBin.setNome(rs.getString("nome"));
+                cliBin.setPlaca(rs.getString("placa"));
+                cliBin.setMarca(rs.getString("marca"));
+                cliBin.setModelo(rs.getString("modelo"));
+                cliBin.setCor(rs.getString("cor"));
+            } else {
+                JOptionPane.showMessageDialog(null, "Cliente n√£o encontrado!!!");
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Os dados n√£o puderam ser encontrados!!!\n" + e.getMessage());
+        } finally {
+            banco.fecharBDConn();
+        }
+    }
+}
